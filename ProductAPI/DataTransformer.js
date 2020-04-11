@@ -1,18 +1,36 @@
 const csv = require("csv-parser");
 const fs = require("fs");
-const createCsvWriter = require("csv-writer").createObjectCsvWriter;
+const createCsvStringifier = require("csv-writer").createObjectCsvStringifier;
 
 let readStream = fs.createReadStream("./data/product.csv");
 let writeStream = fs.createWriteStream("./data/newtest.csv");
 
+const csvStringifier = createCsvStringifier({
+  header: [
+    { id: "id", title: "id" },
+    { id: "name", title: "name" },
+    { id: "slogan", title: "slogan" },
+    { id: "description", title: "description" },
+    { id: "category", title: "category" },
+    { id: "default_price", title: "default_price" },
+  ],
+});
+
+writeStream.write(csvStringifier.getHeaderString());
+
 readStream.pipe(csv()).on("data", (data) => {
   for (let key in data) {
+    //trims whitespace
     let trimKey = key.trim();
-    let onlyNumbers = data[key].replace(/\D/g, "");
-    data[trimKey] = onlyNumbers;
-    delete data[key];
+    data[trimKey] = data[key];
+    if (key !== trimKey) {
+      delete data[key];
+    }
   }
-  console.log(data);
+
+  let onlyNumbers = data.default_price.replace(/\D/g, "");
+  data.default_price = onlyNumbers;
+  writeStream.write(csvStringifier.stringifyRecords([data]));
 });
 
 // .on("end", () => {
