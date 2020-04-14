@@ -24,10 +24,11 @@ class CSVCleaner extends Transform {
         delete chunk[key];
       }
     }
-    //filters out all non-number characters
+    // filters out all non-number characters
     let onlyNumbers = chunk.default_price.replace(/\D/g, "");
     chunk.default_price = onlyNumbers;
     chunk = csvStringifier.stringifyRecords([chunk]);
+    // chunk = skusCsvStringifier.stringifyRecords([chunk]);
     this.push(chunk);
     next();
   }

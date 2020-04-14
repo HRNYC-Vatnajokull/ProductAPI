@@ -11,6 +11,9 @@ let features = {};
 readStream
   .pipe(csv())
   .on("data", (data) => {
+    if (data.productid === "1") {
+      console.log(data);
+    }
     if (!features[data.feature]) {
       features[data.feature] = {};
     }
@@ -32,7 +35,7 @@ const csvStringifier = createCsvStringifier({
 
 writeStream.write(csvStringifier.getHeaderString());
 
-const splitFileRelations = (object) => {
+const splitFileRelations = (features) => {
   let count = 0;
   let joinTable = {};
   for (let feature in features) {
@@ -40,11 +43,6 @@ const splitFileRelations = (object) => {
     for (let value in featureSet) {
       count += 1;
       for (let i = 0; i < featureSet[value].length; i++) {
-        console.log(feature, value);
-        console.log({
-          feature_set_id: count,
-          product_id: featureSet[value][i],
-        });
         writeStream.write(
           csvStringifier.stringifyRecords([
             {
