@@ -52,7 +52,6 @@ module.exports = {
     results.push({ ...styleItem });
 
     let product_id = "" + response.rows[0].product_id;
-    console.log({ product_id, results });
     return { product_id, results };
   },
 

@@ -39,6 +39,17 @@ ETag: W/"2c58-lnG/r4dkxPytVn0TGzHo0Xzgnao"
 Date: Tue, 07 Apr 2020 20:09:41 GMT
 Connection: close
 
+let results = []
+let product_id;
+let photos = []
+let styleItem = {}
+
+
+array.forEach((qItem)=>{
+  
+  
+})
+
 {
   "product_id": "1",
   "results": [
