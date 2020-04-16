@@ -1,4 +1,9 @@
-const { getStyles, getProducts, getRelated } = require("../model");
+const {
+  getStyles,
+  getProducts,
+  getRelated,
+  getProductList,
+} = require("../model");
 
 module.exports = {
   stylesController: async (productId) => {
@@ -16,7 +21,9 @@ module.exports = {
       if (currentStyle !== qItem.id && index !== 0) {
         styleItem.skus = skusObj;
         skusObj = {};
-        styleItem.photos.push({ ...photoObj });
+        if (styleItem.photos) {
+          styleItem.photos.push({ ...photoObj });
+        }
         photoObj = {};
         results.push({ ...styleItem });
         styleItem = {};
@@ -32,77 +39,67 @@ module.exports = {
         }
         styleItem.photos.push({ ...photoObj });
       }
-
-      //   if (!styleItem.photos && photoObj.url) {
-      //     styleItem.photos = [{ ...photoObj }];
-      //   }
       photoObj.thumbnail_url = qItem.thumbnail_url;
       photoObj.url = qItem.url;
       skusObj[qItem.size] = qItem.quanitity;
       currentStyle = qItem.id;
       currentPhotoUrl = qItem.url;
     });
-    //push the last result
     styleItem.skus = skusObj;
-    styleItem.photos.push({ ...photoObj });
+    if (styleItem.photos) {
+      styleItem.photos.push({ ...photoObj });
+    }
     results.push({ ...styleItem });
 
-    let product_id = response.rows[0].product_id;
-
-    console.log(JSON.stringify({ product_id, results }, null, 2));
+    let product_id = "" + response.rows[0].product_id;
+    console.log({ product_id, results });
+    return { product_id, results };
   },
 
-  productController: async () => {
-    let results = await getProducts();
+  productController: async (productId) => {
+    let response = await getProducts(productId);
+    let results = response.rows.reduce((acc, item) => {
+      let feature = item.feature;
+      let value = item.value;
+      item.features = acc.features
+        ? [...acc.features, { feature, value }]
+        : [{ feature, value }];
+      delete item.feature, item.value;
+      return item;
+    }, {});
+    console.log(results);
+
+    return results;
   },
 
-  relatedController: async () => {
-    let results = await getRelated();
+  relatedController: async (productId) => {
+    let response = await getRelated(productId);
+    return response.rows.map((item) => {
+      return item.related_product_id;
+    });
+  },
+
+  productListController: async (count, page) => {
+    let response = await getProductList(count, page);
+    return response.rows;
   },
 };
 
-module.exports.stylesController(1);
+// module.exports.stylesController(2);
+// module.exports.productController(2);
+// module.exports.relatedController(1);
 
 // {
-//   "product_id": "1",
-//   "results": [
-//     {
-//       "style_id": 1,
-//       "name": "Forest Green & Black",
-//       "original_price": "140",
-//       "sale_price": "0",
-//       "default?": 1,
-//       "photos": [
-//         {
-//           "thumbnail_url": "https://images.unsplash.com/photo-1501088430049-71c79fa3283e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-//           "url": "https://images.unsplash.com/photo-1501088430049-71c79fa3283e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80"
-//         },
-//         {
-//           "thumbnail_url": "https://images.unsplash.com/photo-1534011546717-407bced4d25c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-//           "url": "https://images.unsplash.com/photo-1534011546717-407bced4d25c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2734&q=80"
-//         },
-//         {
-//           "thumbnail_url": "https://images.unsplash.com/photo-1549831243-a69a0b3d39e0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-//           "url": "https://images.unsplash.com/photo-1549831243-a69a0b3d39e0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2775&q=80"
-//         },
-//         {
-//           "thumbnail_url": "https://images.unsplash.com/photo-1527522883525-97119bfce82d?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80",
-//           "url": "https://images.unsplash.com/photo-1527522883525-97119bfce82d?ixlib=rb-1.2.1&auto=format&fit=crop&w=668&q=80"
-//         },
-//         {
-//           "thumbnail_url": "https://images.unsplash.com/photo-1556648202-80e751c133da?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-//           "url": "https://images.unsplash.com/photo-1556648202-80e751c133da?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=668&q=80"
-//         },
-//         {
-//           "thumbnail_url": "https://images.unsplash.com/photo-1532543491484-63e29b3c1f5d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-//           "url": "https://images.unsplash.com/photo-1532543491484-63e29b3c1f5d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1000&q=80"
-//         }
-//       ],
-//       "skus": {
-//         "XS": 8,
-//         "S": 16,
-//         "M": 17,
-//         "L": 10,
-//         "XL": 15
+//     "id": 1,
+//     "name": "Camo Onesie",
+//     "slogan": "Blend in to your crowd",
+//     "description": "The So Fatigues will wake you up and fit you in. This high energy camo will have you blending in to even the wildest surroundings.",
+//     "category": "Jackets",
+//     "default_price": "140",
+//     "features": [
+//       {
+//         "feature": "Buttons",
+//         "value": "Brass"
 //       }
-//     },
+//     ]
+//   }
