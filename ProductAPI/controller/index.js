@@ -8,12 +8,15 @@ const {
 module.exports = {
   stylesController: async (productId) => {
     let response = await getStyles(productId);
+    console.log(response.rows);
     // console.log(Object.keys(results));
     //note: everything below can be made into a shaper function
     let results = [];
     let styleItem = {};
     let skusObj = {};
     let photoObj = {};
+    photoObj.thumbnail_url = null;
+    photoObj.url = null;
     let currentStyle;
     let currentPhotoUrl;
     //shape data
@@ -23,8 +26,12 @@ module.exports = {
         skusObj = {};
         if (styleItem.photos) {
           styleItem.photos.push({ ...photoObj });
+        } else {
+          styleItem.photos = [{ ...photoObj }];
         }
         photoObj = {};
+        photoObj.thumbnail_url = null;
+        photoObj.url = null;
         results.push({ ...styleItem });
         styleItem = {};
       }
@@ -48,10 +55,13 @@ module.exports = {
     styleItem.skus = skusObj;
     if (styleItem.photos) {
       styleItem.photos.push({ ...photoObj });
+    } else {
+      styleItem.photos = [{ ...photoObj }];
     }
     results.push({ ...styleItem });
 
     let product_id = "" + response.rows[0].product_id;
+    console.log(JSON.stringify(results, null, 2));
     return { product_id, results };
   },
 
@@ -66,7 +76,6 @@ module.exports = {
       delete item.feature, item.value;
       return item;
     }, {});
-    console.log(results);
 
     return results;
   },
