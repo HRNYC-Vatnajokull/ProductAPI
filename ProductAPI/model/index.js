@@ -28,14 +28,19 @@ module.exports = {
 
   getStyles: async (productId) => {
     try {
-      return await db.query(`SELECT s.product_id, s.id, s.name, s.default_style, s.original_price, s.sale_price,
-      p.thumbnail_url, p.url, sk.size,sk.quanitity
-      FROM styles AS s
-      left JOIN photos AS p 
-      ON s.id = p.style_id 
-      left JOIN skus AS sk
-      ON s.id = sk.styleid
-      WHERE s.product_id = ${productId}`);
+      return await db.query(`SELECT json_build_object(
+        'style_id', s.id,
+        'product_id', s.product_id,
+        'name', s.name,
+        'sale_price', s.sale_price,
+        'default?', s.default_style, 
+        'original_price', s.original_price,
+        'skus',(SELECT json_object_agg("size", "quanitity") FROM skus WHERE skus.styleid = s.id GROUP BY skus.styleid),
+        'photos', ARRAY(SELECT json_build_object('url', photos.url, 'thumbnail_url', photos.thumbnail_url)FROM photos WHERE photos.style_id = s.id)
+          ) 
+        FROM styles AS s
+        WHERE s.product_id = ${productId}
+        GROUP BY s.id`);
     } catch (err) {
       console.log(err);
     }

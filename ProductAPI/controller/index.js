@@ -8,60 +8,22 @@ const {
 module.exports = {
   stylesController: async (productId) => {
     let response = await getStyles(productId);
-    console.log(response.rows);
-    // console.log(Object.keys(results));
-    //note: everything below can be made into a shaper function
-    let results = [];
-    let styleItem = {};
-    let skusObj = {};
-    let photoObj = {};
-    photoObj.thumbnail_url = null;
-    photoObj.url = null;
-    let currentStyle;
-    let currentPhotoUrl;
-    //shape data
-    response.rows.forEach((qItem, index) => {
-      if (currentStyle !== qItem.id && index !== 0) {
-        styleItem.skus = skusObj;
-        skusObj = {};
-        if (styleItem.photos) {
-          styleItem.photos.push({ ...photoObj });
-        } else {
-          styleItem.photos = [{ ...photoObj }];
-        }
-        photoObj = {};
-        photoObj.thumbnail_url = null;
-        photoObj.url = null;
-        results.push({ ...styleItem });
-        styleItem = {};
+    let results = response.rows.map((resObj) => {
+      let styleObj = { ...resObj.json_build_object };
+      if (styleObj.photos.length === 0) {
+        styleObj.photos = [
+          {
+            url: null,
+            thumbnail_url: null,
+          },
+        ];
       }
-      styleItem["style_id"] = qItem.id;
-      styleItem["name"] = qItem.name;
-      styleItem["original_price"] = qItem.original_price;
-      styleItem["sale_price"] = qItem.sale_price;
-      styleItem["default?"] = qItem.default_style;
-      if (currentPhotoUrl !== qItem.url && photoObj.url) {
-        if (!styleItem.photos) {
-          styleItem.photos = [];
-        }
-        styleItem.photos.push({ ...photoObj });
+      if (styleObj.skus === null) {
+        styleObj.skus = {};
       }
-      photoObj.thumbnail_url = qItem.thumbnail_url;
-      photoObj.url = qItem.url;
-      skusObj[qItem.size] = qItem.quanitity;
-      currentStyle = qItem.id;
-      currentPhotoUrl = qItem.url;
+      return styleObj;
     });
-    styleItem.skus = skusObj;
-    if (styleItem.photos) {
-      styleItem.photos.push({ ...photoObj });
-    } else {
-      styleItem.photos = [{ ...photoObj }];
-    }
-    results.push({ ...styleItem });
-
-    let product_id = "" + response.rows[0].product_id;
-    console.log(JSON.stringify(results, null, 2));
+    let product_id = "" + response.rows[0].json_build_object.product_id;
     return { product_id, results };
   },
 
